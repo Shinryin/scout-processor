@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>im lazy asf</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f4f4f4;
+        }
+        .form-group {
+            margin: 10px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+        input[type="url"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.clear {
+            background-color: #f44336;
+        }
+        .result-container {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            width: 100%;
+            max-width: 400px;
+        }
+        .result {
+            font-size: 16px;
+            color: #f4f4f4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scout Processor</h1>
+    <div class="form-group">
+        <label for="bearLink">Bear Link:</label>
+        <input type="url" id="bearLink" name="bearLink" placeholder="Paste Bear link here...">
+    </div>
+    <div class="form-group">
+        <label for="sirenLink">Siren Link:</label>
+        <input type="url" id="sirenLink" name="sirenLink" placeholder="Paste Siren link here...">
+    </div>
+    <div class="form-group" id="expansionGroup">
+        <label for="expansion">Expansion:</label>
+        <select id="expansion" name="expansion">
+            <option value="Endwalker">Endwalker</option>
+            <option value="Shadowbringers">Shadowbringers</option>
+            <option value="Stormblood">Stormblood</option>
+            <option value="Heavensward">Heavensward</option>
+        </select>
+    </div>
+    <div class="form-group" id="serverGroup">
+        <label for="server">Server:</label>
+        <select id="server" name="server">
+            <option value="Alpha">Alpha</option>
+            <option value="Lich">Lich</option>
+            <option value="Odin">Odin</option>
+            <option value="Phoenix">Phoenix</option>
+            <option value="Raiden">Raiden</option>
+            <option value="Shiva">Shiva</option>
+            <option value="Twintania">Twintania</option>
+            <option value="Zodiark">Zodiark</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="marks">Marks Alive:</label>
+        <input type="number" id="marks" name="marks" placeholder="Enter marks...">
+    </div>
+    <div class="form-group">
+        <label>
+            <input type="checkbox" id="ffaPersonal" name="ffaPersonal"> Is this train FFA?
+        </label>
+    </div>
+    <div class="button-group">
+        <button id="generateButton">Generate</button>
+        <button id="copyButton" class="hidden">Copy to Clipboard</button>
+        <button id="clearButton" class="clear">Clear</button>
+    </div>
+    <div class="result-container hidden" id="resultContainer">
+        <div class="result" id="resultText"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const bearLinkInput = document.getElementById("bearLink");
+            const sirenLinkInput = document.getElementById("sirenLink");
+            const expansionSelect = document.getElementById("expansion");
+            const expansionGroup = document.getElementById("expansionGroup");
+            const serverSelect = document.getElementById("server");
+            const marksInput = document.getElementById("marks");
+            const ffaPersonalCheckbox = document.getElementById("ffaPersonal");
+            const resultText = document.getElementById("resultText");
+            const resultContainer = document.getElementById("resultContainer");
+            const generateButton = document.getElementById("generateButton");
+            const copyButton = document.getElementById("copyButton");
+            const clearButton = document.getElementById("clearButton");
+
+            function detectExpansion() {
+                const sirenLink = sirenLinkInput.value.trim();
+                if (sirenLink) {
+                    const match = sirenLink.match(/scouting\/(.*?)>/);
+                    if (match && match[1]) {
+                        const expansionCode = match[1];
+                        let expansion;
+                        switch (expansionCode) {
+                            case 'EW':
+                                expansion = 'Endwalker';
+                                break;
+                            case 'SHB':
+                                expansion = 'Shadowbringers';
+                                break;
+                            case 'SB':
+                                expansion = 'Stormblood';
+                                break;
+                            case 'HW':
+                                expansion = 'Heavensward';
+                                break;
+                            default:
+                                expansion = null;
+                        }
+                        if (expansion) {
+                            expansionSelect.value = expansion;
+                            expansionGroup.style.display = 'none';
+                        } else {
+                            expansionGroup.style.display = 'block';
+                        }
+                    }
+                } else {
+                    expansionGroup.style.display = 'block';
+                }
+            }
+
+            function generateResult() {
+                const bearLink = bearLinkInput.value.trim();
+                const sirenLink = sirenLinkInput.value.trim();
+                const expansion = expansionSelect.value;
+                const server = serverSelect.value;
+                const marks = marksInput.value;
+                const ffaPersonal = ffaPersonalCheckbox.checked;
+
+                let times = 6;
+                if (expansion === "Shadowbringers") times = 5;
+                if (expansion === "Stormblood") times = 4;
+                if (expansion === "Heavensward") times = 3;
+
+                let result = "";
+                if (bearLink) result += `[Bear](<${bearLink}>) `;
+                if (bearLink && sirenLink) result += `| `;
+                if (sirenLink) result += `[Siren](<${sirenLink}>) `;
+                if (result) result += `:${times}x: `;
+                result += `${server} ${marks}/12 ${ffaPersonal ? 'FFA' : 'Personal'}`;
+
+                resultText.textContent = result;
+                resultContainer.classList.remove("hidden");
+                copyButton.classList.remove("hidden");
+            }
+
+            function copyToClipboard() {
+                const textToCopy = resultText.textContent;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("Copied to clipboard.");
+                }).catch(err => {
+                    console.error("Failed copy: ", err);
+                });
+            }
+
+            function clearForm() {
+                bearLinkInput.value = "";
+                sirenLinkInput.value = "";
+                expansionSelect.value = "Endwalker";
+                expansionGroup.style.display = 'block';
+                serverSelect.value = "Alpha";
+                marksInput.value = "";
+                ffaPersonalCheckbox.checked = false;
+                resultText.textContent = "";
+                resultContainer.classList.add("hidden");
+                copyButton.classList.add("hidden");
+            }
+
+            sirenLinkInput.addEventListener("input", detectExpansion);
+            generateButton.addEventListener("click", generateResult);
+            copyButton.addEventListener("click", copyToClipboard);
+            clearButton.addEventListener("click", clearForm);
+        });
+    </script>
+</body>
+</html>
